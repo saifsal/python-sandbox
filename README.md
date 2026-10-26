@@ -92,7 +92,7 @@ ciphertext = extended_encrypt(n, b"hello")
 print(extended_decrypt(ciphertext, p, q))
 ```
 
-Importing `bowling` or `shortestpath` runs them immediately. Call their functions only if that side effect is acceptable, or run the files as scripts.
+Importing `bowling` plays a game immediately. `shortestpath` does not: its country search runs only when the file is executed as a script.
 
 Paste `neighborcountries.js` into the developer console on a page that contains `table.wikitable`. The snippet's return value is the country map.
 
@@ -109,16 +109,19 @@ There is no config file.
 
 ## Development and testing
 
-The repository has no test suite, linter, formatter, or type checker. After a change, compile the Python files and run the script you edited:
+There is no linter, formatter, or type checker. `tests/test_rabin.py` checks Rabin padding and encryption boundaries and pinned ciphertext round trips, using fixed primes so the tests do not call PyCryptodome. `tests/test_shortestpath.py` checks breadth-first search, graph validation, and the Haiti and East Timor routes in `countries.json`.
+
+After a change, compile the Python files and run the unit tests from the repository root:
 
 ```bash
 python3 -m py_compile bowling.py shortestpath.py rabincryptosystem.py
+python3 -m unittest discover -s tests -t .
 python3 bowling.py
 python3 shortestpath.py
 python3 rabincryptosystem.py
 ```
 
-`shortestpath.py` must be started from the repository root. The Rabin demo needs PyCryptodome.
+`shortestpath.py` must be started from the repository root. The Rabin demo needs PyCryptodome. The unit tests do not.
 
 Agent instructions live in [`AGENTS.md`](AGENTS.md).
 
