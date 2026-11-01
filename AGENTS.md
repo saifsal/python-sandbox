@@ -11,7 +11,7 @@ The scripts are:
 - `bowling.py` plays one random ten-pin game (10 frames; the two balls in a frame sum to at most 10) and prints the frames and a score from `count_points`.
 - `neighborcountries.js` is a browser-console snippet. On a page with `table.wikitable`, it returns an object mapping each country name to neighbouring names. It leaves the page and `countries.json` unchanged.
 
-Current status: the Python scripts run as standalone programs. The repository has no installable package, test suite, continuous integration, or roadmap. The licence is the GNU General Public License v3.0 (`LICENSE`).
+Current status: the Python scripts run as standalone programs. `tests/` holds unittest modules for the Rabin cryptosystem and the border-graph helpers. There is no installable package, continuous integration, or roadmap. The licence is the GNU General Public License v3.0 (`LICENSE`).
 
 ## Repository layout
 
@@ -25,7 +25,8 @@ python-sandbox/
 ├── rabincryptosystem.py               # Rabin cryptosystem
 ├── shortestpath.py                    # Border-graph shortest paths
 ├── countries.json                     # Country to list of land neighbours
-└── neighborcountries.js               # Browser snippet for a Wikipedia table
+├── neighborcountries.js               # Browser snippet for a Wikipedia table
+└── tests/                             # unittest modules for Rabin and the border graph
 ```
 
 `countries.json` is a JSON object of 159 country names. Each value is a list of bordering countries. The file contains 323 undirected borders and two connected components: Haiti with the Dominican Republic, and the other 157 countries. Every country in the file has at least one neighbour. `shortestpath.py` reports the graph as consistent (`validate_graph` returns no errors).
@@ -68,13 +69,14 @@ That path has 17 intermediate countries. Two other pairs also have 17: El Salvad
 
 `rabincryptosystem.py` prints the fixed plaintext, one hexadecimal ciphertext block per chunk, and the decrypted plaintext, which matches the original. With PyCryptodome 3.24.1, generating the 1536-bit key and finishing the round trip took a few seconds.
 
-There is no test suite and no test runner. This syntax check completed successfully:
+Unit tests cover Rabin encryption boundaries and pinned round trips, plus border-graph search and `validate_graph`. They do not need PyCryptodome. From the repository root:
 
 ```bash
 python3 -m py_compile bowling.py shortestpath.py rabincryptosystem.py
+python3 -m unittest discover -s tests -t .
 ```
 
-Before committing, run `py_compile` and the script you changed. Run `python3 shortestpath.py` from the repository root. Run `python3 rabincryptosystem.py` when PyCryptodome is installed.
+Before committing, run `py_compile` and those unit tests. Run `python3 shortestpath.py` from the repository root when the script's printed route changes. Run `python3 rabincryptosystem.py` when PyCryptodome is installed.
 
 `neighborcountries.js` is for a browser console on a page that contains `table.wikitable`. `node neighborcountries.js` fails with `ReferenceError: document is not defined`.
 
@@ -84,7 +86,7 @@ Before committing, run `py_compile` and the script you changed. Run `python3 sho
 - Python indentation is four spaces. `countries.json` is indented with four spaces.
 - Match the file you are editing. `bowling.py` and `rabincryptosystem.py` annotate functions. `shortestpath.py` does not.
 - `rabincryptosystem.py` separates helpers, core operations, wrappers, and the command-line demo with comment banners. The demo is under `if __name__ == "__main__"`.
-- `bowling.py` and `shortestpath.py` run their main logic at import time.
+- `shortestpath.py` prints the country routes from `main` under the same guard. `bowling.py` still runs its game at import time.
 - Names in Python are `snake_case`. Module-level constants in `bowling.py` are `MAX` and `ROUNDS`. The `Bonus` class holds `NO`, `STRIKE`, and `SPARE`.
 - No formatter, linter, or type checker is configured. Leave that alone unless the change is specifically about tooling.
 - `neighborcountries.js` is one immediately invoked function expression. It is not an npm package.
@@ -102,14 +104,14 @@ Tooling that is present:
 ## Working rules for agents
 
 - Keep changes small and focused.
-- Run the tests before committing. There is no automated suite; run `python3 -m py_compile` on the Python files you touch, and run the affected script from the repository root.
+- Run the tests before committing. Run `python3 -m py_compile` on the Python files you touch, and `python3 -m unittest discover -s tests -t .` from the repository root. Also run the affected script when its printed output can change.
 - Never commit secrets.
 - Update the docs when behaviour changes. That includes this file, `README.md`, and the command output quoted above when `countries.json` or a script's printed results change.
 - Use conventional commit messages (`docs:`, `fix:`, `feat:`, and so on).
 
 ## Gotchas
 
-- `bowling.py` and `shortestpath.py` have no `__main__` guard. Importing either module executes it. `shortestpath.py` opens `countries.json` in the current working directory, so the import fails from another directory.
+- `bowling.py` has no `__main__` guard. Importing it plays a game and prints the score. `shortestpath.py` opens `countries.json` only from `main`, and that path is relative to the current working directory, so `python3 shortestpath.py` must be started from the repository root.
 - `bonus` in `bowling.py` is annotated as returning `int` and returns a pair `(bonus_code, carry)`. A frame is treated as a strike when `max(f) == 10`, so `(0, 10)` is scored as a strike.
 - `encrypt` raises `ValueError` unless `m < n` and `m * m > n`. `extended_encrypt` pads the message and, when the plaintext integer is larger than `n`, splits it into chunks of `size_int(n) - 5` bytes before padding. The return value is one `int`, or a `list` of ints when the message was split. `extended_decrypt` special-cases `list` and otherwise treats the argument as a single ciphertext integer.
 - Decryption returns four roots. `find_solution` keeps the candidate whose trailing bytes are a repeated pad length. Ambiguous padding can select the wrong root.

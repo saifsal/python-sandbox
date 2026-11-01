@@ -109,25 +109,30 @@ def validate_graph(graph):
 
     return errors
 
-with open("countries.json", "r") as countries:
-    graph = json.load(countries)
+def main():
+    with open("countries.json", "r") as countries:
+        graph = json.load(countries)
 
-    errors = validate_graph(graph)
+        errors = validate_graph(graph)
 
-    if errors:
-        print("Graph contains errors:")
-        for error in errors:
-            print(f"  - {error}")
-    else:
-        print("Graph is consistent.")
+        if errors:
+            print("Graph contains errors:")
+            for error in errors:
+                print(f"  - {error}")
+        else:
+            print("Graph is consistent.")
 
-    results = find_all_country_pairs(graph)
+        results = find_all_country_pairs(graph)
 
-    winning_path = results[0]['path']
-    print(*winning_path, sep=" -> ")
+        winning_path = results[0]['path']
+        print(*winning_path, sep=" -> ")
 
-    for result in results[:100]:
-        print(
-            f"{result['intermediate']:2d} | "
-            f"{result['country_a']} -> {result['country_b']}"
-        )
+        for result in results[:100]:
+            print(
+                f"{result['intermediate']:2d} | "
+                f"{result['country_a']} -> {result['country_b']}"
+            )
+
+
+if __name__ == "__main__":
+    main()
